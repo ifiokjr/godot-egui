@@ -1,0 +1,28 @@
+[package]
+name = "egui-theme"
+version = "0.2.0"
+authors = ["Jacobsky"]
+edition = "2021"
+description = "A standalone serializable theme container for use with Egui."
+license = "MIT"
+readme = "README.md"
+
+
+[lib]
+name = "egui_theme"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# This requires egui to work
+egui = { workspace = true, features = ["serde"] }
+# This is used for serialization
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+ron = { workspace = true }
+
+[build-dependencies]
+cargo-lock = { workspace = true }
+cargo_toml = { workspace = true }

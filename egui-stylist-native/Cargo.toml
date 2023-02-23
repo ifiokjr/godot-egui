@@ -1,0 +1,37 @@
+[package]
+name = "egui-stylist-native"
+version = "0.2.0"
+authors = ["Jacobsky"]
+edition = "2021"
+description = "The native application for egui-stylist"
+license = "MIT"
+readme = "README.md"
+
+[[bin]]
+name = "egui-stylist-native"
+path = "src/main.rs"
+
+# TODO: Enable WASM32 builds for this
+# WASM build
+# [lib]
+# name = "egui_stylist_web"
+# path = "src/lib.rs"
+# crate-type = ["cdylib"]
+
+[dependencies]
+egui-theme = { workspace = true }
+egui-stylist = { workspace = true }
+# Gives us egui, epi and web+native backends
+eframe = { workspace = true }
+# Required for font serialization
+base64 = { workspace = true }
+rfd = { workspace = true }
+ron = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+futures = { workspace = true }
+
+[features]
+default = []
+persistence = [
+  "eframe/persistence",
+] # Enable if you want to persist app state on shutdown

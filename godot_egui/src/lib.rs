@@ -4,14 +4,13 @@ use std::rc::Rc;
 
 use egui::epaint::ImageDelta;
 use egui::{Event, FullOutput};
+#[cfg(feature = "theme_support")]
+use gdnative::api::File;
 use gdnative::api::{
     GlobalConstants, ImageTexture, InputEventMouseButton, InputEventMouseMotion, ShaderMaterial, VisualServer,
 };
-
-#[cfg(feature = "theme_support")]
-use gdnative::api::File;
-
-use gdnative::export::{hint::EnumHint, Export};
+use gdnative::export::hint::EnumHint;
+use gdnative::export::Export;
 use gdnative::prelude::*;
 
 /// Contains conversion tables between Godot and egui input constants (keys, mouse buttons)
@@ -113,7 +112,7 @@ pub struct GodotEgui {
     theme_path: String,
 }
 
-#[gdnative::derive::methods]
+#[methods]
 impl GodotEgui {
     fn register_properties(builder: &ClassBuilder<GodotEgui>) {
         use gdnative::export::hint::{FloatHint, RangeHint, StringHint};
@@ -154,7 +153,8 @@ impl GodotEgui {
         }
     }
 
-    /// Set the pixels_per_point use by `egui` to render the screen. This should be used to scale the `egui` nodes if you are using a non-standard scale for nodes in your game.
+    /// Set the pixels_per_point use by `egui` to render the screen. This should be used to scale the `egui`
+    /// nodes if you are using a non-standard scale for nodes in your game.
     #[export]
     pub fn set_pixels_per_point(&mut self, _owner: TRef<Control>, pixels_per_point: f64) {
         if pixels_per_point > 0f64 {
@@ -196,7 +196,10 @@ impl GodotEgui {
         // This decision is so that we do not have to recompile when testing the shaders.
         // TODO: Make this a build feature flag.
         self.shader_material = if let Some(material) = owner.material() {
-            godot_error!("godot-egui has a material already set. This is for shader testing purposes. Clear the material if not testing shaders.");
+            godot_error!(
+                "godot-egui has a material already set. This is for shader testing purposes. Clear the material \
+                 if not testing shaders."
+            );
             material.cast::<ShaderMaterial>()
         } else {
             // Create the egui shader to automatically add all the cool stuff.
@@ -250,9 +253,7 @@ impl GodotEgui {
 
     /// Is used to indicate if the mouse was captured during the previous frame.
     #[export]
-    pub fn mouse_was_captured(&self, _owner: TRef<Control>) -> bool {
-        self.mouse_was_captured
-    }
+    pub fn mouse_was_captured(&self, _owner: TRef<Control>) -> bool { self.mouse_was_captured }
 
     #[export]
     pub fn _input(&mut self, owner: TRef<Control>, event: Ref<InputEvent>) {
@@ -273,9 +274,10 @@ impl GodotEgui {
     }
 
     /// Call from the user code to pass the input event into `Egui`.
-    /// `event` should be the raw `InputEvent` that is handled by `_input`, `_gui_input` and `_unhandled_input`.
-    /// `is_gui_input` should be true only if this event should be processed like it was emitted from the `_gui_input` callback.
-    /// # Note: If you are calling this manually, self.input_mode *MUST* be set to GodotEguiInputMode::None
+    /// `event` should be the raw `InputEvent` that is handled by `_input`, `_gui_input` and
+    /// `_unhandled_input`. `is_gui_input` should be true only if this event should be processed like it
+    /// was emitted from the `_gui_input` callback. # Note: If you are calling this manually, self.input_mode
+    /// *MUST* be set to GodotEguiInputMode::None
     #[export]
     pub fn handle_godot_input(&mut self, owner: TRef<Control>, event: Ref<InputEvent>, is_gui_input: bool) {
         let event = unsafe { event.assume_safe() };
@@ -287,13 +289,14 @@ impl GodotEgui {
                 // Note: The `_gui_input` callback adjusts the offset before adding the event.
                 mouse_pos
             } else {
-                // NOTE: The egui is painted inside a control node, so its global rect offset must be taken into account.
+                // NOTE: The egui is painted inside a control node, so its global rect offset must be taken into
+                // account.
                 let offset_position = mouse_pos - owner.get_global_rect().position;
                 // This is used to get the correct rotation when the root node is rotated.
                 owner.get_global_transform().affine_inverse().basis_xform(offset_position)
             };
-            // It is necessary to translate the mouse position which refers to physical pixel position to egui's logical points
-            // This is found using the inverse of current `pixels_per_point` setting.
+            // It is necessary to translate the mouse position which refers to physical pixel position to egui's
+            // logical points This is found using the inverse of current `pixels_per_point` setting.
             let points_per_pixel = 1.0 / pixels_per_point;
             egui::Pos2 { x: transformed_pos.x * points_per_pixel, y: transformed_pos.y * points_per_pixel }
         };
@@ -536,17 +539,10 @@ impl GodotEgui {
                         ),
                     );
                     vs.canvas_item_set_clip(vs_mesh.canvas_item, true);
-                    vs.canvas_item_set_custom_rect(
-                        vs_mesh.canvas_item,
-                        true,
-                        Rect2 {
-                            position: Vector2::new(clip_rect.min.x, clip_rect.min.y),
-                            size: Vector2::new(
-                                clip_rect.max.x - clip_rect.min.x,
-                                clip_rect.max.y - clip_rect.min.y,
-                            ),
-                        },
-                    );
+                    vs.canvas_item_set_custom_rect(vs_mesh.canvas_item, true, Rect2 {
+                        position: Vector2::new(clip_rect.min.x, clip_rect.min.y),
+                        size: Vector2::new(clip_rect.max.x - clip_rect.min.x, clip_rect.max.y - clip_rect.min.y),
+                    });
                 }
             }
             // Cleanup textures as required
@@ -556,10 +552,11 @@ impl GodotEgui {
         }
     }
 
-    /// Clears the screen, this can be used to cleanup the various textures and meshes that are currently being drawn to the screen from egui.
-    /// # Usage Note
-    /// This should only be necessary when you wish to disable an Egui node and do not wish to use the internal Godot visibility or when you wish to free canvas_item resources
-    /// for memory intensive GUIs.
+    /// Clears the screen, this can be used to cleanup the various textures and meshes that are currently
+    /// being drawn to the screen from egui. # Usage Note
+    /// This should only be necessary when you wish to disable an Egui node and do not wish to use the
+    /// internal Godot visibility or when you wish to free canvas_item resources for memory intensive
+    /// GUIs.
     #[export]
     fn clear(&mut self, _owner: TRef<Control>) {
         let vs = unsafe { VisualServer::godot_singleton() };
@@ -575,14 +572,13 @@ impl GodotEgui {
     /// Has no effect when `reactive_update` is false.
     /// ## Usage Note
     ///
-    /// This should only be necessary when you have a `reactive_update` GUI that needs to respond only to changes that occur
-    /// asynchronously (such as via signals) and very rarely such as a static HUD.
+    /// This should only be necessary when you have a `reactive_update` GUI that needs to respond only to
+    /// changes that occur asynchronously (such as via signals) and very rarely such as a static HUD.
     ///
-    /// If the UI should be updated almost every frame due to animations or constant changes with data, favor setting `reactive_update` to true instead.
+    /// If the UI should be updated almost every frame due to animations or constant changes with data, favor
+    /// setting `reactive_update` to true instead.
     #[export]
-    fn refresh(&self, _owner: TRef<Control>) {
-        self.egui_ctx.request_repaint();
-    }
+    fn refresh(&self, _owner: TRef<Control>) { self.egui_ctx.request_repaint(); }
 
     /// Call this to draw a new frame using a closure taking a single `egui::Context` parameter
     pub fn update_ctx(&mut self, owner: &Control, draw_fn: impl FnOnce(&mut egui::Context)) {
@@ -601,8 +597,8 @@ impl GodotEgui {
 
         self.egui_ctx.begin_frame(raw_input);
 
-        // This ensures that while not using `reactive_update` that the UI is redrawn each frame regardless of whether the output would
-        // normally request a repaint.
+        // This ensures that while not using `reactive_update` that the UI is redrawn each frame regardless of
+        // whether the output would normally request a repaint.
         if !self.reactive_update {
             self.egui_ctx.request_repaint();
         }
@@ -610,7 +606,7 @@ impl GodotEgui {
         draw_fn(&mut self.egui_ctx);
 
         // Render GUI
-        let egui::FullOutput { platform_output, needs_repaint, shapes, textures_delta } =
+        let egui::FullOutput { platform_output, shapes, textures_delta, repaint_after } =
             self.egui_ctx.end_frame();
 
         // Each frame, we set the mouse_was_captured flag so that we know whether egui should be
@@ -624,7 +620,8 @@ impl GodotEgui {
             owner.set_default_cursor_shape(enum_conversions::mouse_cursor_egui_to_godot(self.cursor_icon).0);
         }
         // `egui_ctx` will use all the layout code to determine if there are any changes.
-        // `output.needs_repaint` lets `GodotEgui` know whether we need to redraw the clipped mesh and repaint the new texture or not.
+        // `output.needs_repaint` lets `GodotEgui` know whether we need to redraw the clipped mesh and repaint the
+        // new texture or not.
         if needs_repaint {
             let clipped_meshes = self.egui_ctx.tessellate(shapes);
             self.paint_shapes(owner, clipped_meshes, textures_delta);
@@ -647,7 +644,8 @@ impl GodotEgui {
     }
 }
 
-// This `Drop` is required to ensure that the VisualServerMesh RIDs are properly freed when GodotEgui is freed.
+// This `Drop` is required to ensure that the VisualServerMesh RIDs are properly freed when GodotEgui is
+// freed.
 impl Drop for GodotEgui {
     fn drop(&mut self) {
         let vs = unsafe { VisualServer::godot_singleton() };
@@ -663,14 +661,10 @@ impl Drop for GodotEgui {
 /// ## Note
 /// This method should not be used in any library where `register_classes_as_tool` is run. Doing so may result
 /// in `gdnative` errors.
-pub fn register_classes(handle: InitHandle) {
-    handle.add_class::<GodotEgui>();
-}
+pub fn register_classes(handle: InitHandle) { handle.add_class::<GodotEgui>(); }
 
 /// Helper method that registers all GodotEgui `NativeClass` objects as tool scripts. This should **only** be
 /// used when GodotEgui is to be run inside the Godot editor. ## Note
 /// This method should not be used in any library where `register_classes` is run. Doing so may result in
 /// `gdnative` errors.
-pub fn register_classes_as_tool(handle: InitHandle) {
-    handle.add_tool_class::<GodotEgui>();
-}
+pub fn register_classes_as_tool(handle: InitHandle) { handle.add_tool_class::<GodotEgui>(); }

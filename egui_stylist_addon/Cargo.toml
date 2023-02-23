@@ -17,5 +17,4 @@ egui-theme = { workspace = true }
 egui-stylist = { workspace = true }
 
 ron = { workspace = true }
-anyhow = { workspace = true }
 serde = { workspace = true }

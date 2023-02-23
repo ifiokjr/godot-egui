@@ -1,0 +1,23 @@
+[package]
+name = "egui-stylist"
+version = "0.2.0"
+authors = ["Jacobsky"]
+edition = "2021"
+description = "An embeddable theme editor for egui."
+license = "MIT"
+readme = "README.md"
+
+
+# Embeddable application library
+[lib]
+name = "egui_stylist"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
+[dependencies]
+egui-theme = { workspace = true }
+egui = { workspace = true, features = ["serde"] }
+# Required for font serialization
+base64 = { workspace = true }
+# Required for serialization
+serde = { workspace = true, features = ["derive"] }
