@@ -1,8 +1,9 @@
 //! These Extension traits extend `egui::Ui` to have easy access to the Godot Input singleton.
-//! This module helps bridge the gap between `egui`'s input events and allows you to leverage Godot's Input singleton
-//! directly in `egui`
+//! This module helps bridge the gap between `egui`'s input events and allows you to leverage Godot's Input
+//! singleton directly in `egui`
 //!
-//! To use these extension methods, import the needed extensions into your `GodotEgui` project where you need the traits.
+//! To use these extension methods, import the needed extensions into your `GodotEgui` project where you need
+//! the traits.
 use gdnative::api::input::{CursorShape, MouseMode};
 use gdnative::api::Resource;
 use gdnative::prelude::*;
@@ -12,50 +13,34 @@ impl MouseKeyboardInputExt for egui::Ui {}
 impl MobileInputExt for egui::Ui {}
 impl JoypadInputExt for egui::Ui {}
 
-/// An extension that can be used to add access to Godot's `Input` singleton's methods directly from any other object.
-/// This trait specifically implements input handling exclusive to Mobile Devices.
+/// An extension that can be used to add access to Godot's `Input` singleton's methods directly from any other
+/// object. This trait specifically implements input handling exclusive to Mobile Devices.
 pub trait MobileInputExt {
     #[inline]
-    fn get_accelerometer(&self) -> Vector3 {
-        Input::godot_singleton().get_accelerometer()
-    }
+    fn get_accelerometer(&self) -> Vector3 { Input::godot_singleton().get_accelerometer() }
     #[inline]
-    fn get_gyroscope(&self) -> Vector3 {
-        Input::godot_singleton().get_gyroscope()
-    }
+    fn get_gyroscope(&self) -> Vector3 { Input::godot_singleton().get_gyroscope() }
     #[inline]
-    fn get_magnetometer(&self) -> Vector3 {
-        Input::godot_singleton().get_magnetometer()
-    }
+    fn get_magnetometer(&self) -> Vector3 { Input::godot_singleton().get_magnetometer() }
     #[inline]
-    fn get_gravity(&self) -> Vector3 {
-        Input::godot_singleton().get_gravity()
-    }
+    fn get_gravity(&self) -> Vector3 { Input::godot_singleton().get_gravity() }
     #[inline]
-    fn vibrate_handheld(&self, duration_ms: i64) {
-        Input::godot_singleton().vibrate_handheld(duration_ms)
-    }
+    fn vibrate_handheld(&self, duration_ms: i64) { Input::godot_singleton().vibrate_handheld(duration_ms) }
 }
 
-/// An extension that can be used to add access to Godot's `Input` singleton's methods directly from any other object.
-/// This trait specifically implements input handling joypads.
+/// An extension that can be used to add access to Godot's `Input` singleton's methods directly from any other
+/// object. This trait specifically implements input handling joypads.
 pub trait JoypadInputExt {
     #[inline]
     fn is_joy_button_pressed(&self, device: i64, button: i64) -> bool {
         Input::godot_singleton().is_joy_button_pressed(device, button)
     }
     #[inline]
-    fn is_joy_known(&self, device: i64) -> bool {
-        Input::godot_singleton().is_joy_known(device)
-    }
+    fn is_joy_known(&self, device: i64) -> bool { Input::godot_singleton().is_joy_known(device) }
     #[inline]
-    fn get_connected_joypads(&self) -> VariantArray<Shared> {
-        Input::godot_singleton().get_connected_joypads()
-    }
+    fn get_connected_joypads(&self) -> VariantArray<Shared> { Input::godot_singleton().get_connected_joypads() }
     #[inline]
-    fn get_joy_axis(&self, device: i64, axis: i64) -> f64 {
-        Input::godot_singleton().get_joy_axis(device, axis)
-    }
+    fn get_joy_axis(&self, device: i64, axis: i64) -> f64 { Input::godot_singleton().get_joy_axis(device, axis) }
     #[inline]
     fn get_joy_axis_index_from_string(&self, axis: impl Into<GodotString>) -> i64 {
         Input::godot_singleton().get_joy_axis_index_from_string(axis)
@@ -73,13 +58,9 @@ pub trait JoypadInputExt {
         Input::godot_singleton().get_joy_button_string(button_index)
     }
     #[inline]
-    fn get_joy_guid(&self, device: i64) -> GodotString {
-        Input::godot_singleton().get_joy_guid(device)
-    }
+    fn get_joy_guid(&self, device: i64) -> GodotString { Input::godot_singleton().get_joy_guid(device) }
     #[inline]
-    fn get_joy_name(&self, device: i64) -> GodotString {
-        Input::godot_singleton().get_joy_name(device)
-    }
+    fn get_joy_name(&self, device: i64) -> GodotString { Input::godot_singleton().get_joy_name(device) }
     #[inline]
     fn get_joy_vibration_duration(&self, device: i64) -> f64 {
         Input::godot_singleton().get_joy_vibration_duration(device)
@@ -103,13 +84,11 @@ pub trait JoypadInputExt {
         Input::godot_singleton().start_joy_vibration(device, weak_magnitude, strong_magnitude, duration)
     }
     #[inline]
-    fn stop_joy_vibration(&self, device: i64) {
-        Input::godot_singleton().stop_joy_vibration(device)
-    }
+    fn stop_joy_vibration(&self, device: i64) { Input::godot_singleton().stop_joy_vibration(device) }
 }
 
-/// An extension that can be used to add access to Godot's `Input` singleton's methods directly from any other object.
-/// This trait specifically implements input handling for mouse and keyboard.
+/// An extension that can be used to add access to Godot's `Input` singleton's methods directly from any other
+/// object. This trait specifically implements input handling for mouse and keyboard.
 pub trait MouseKeyboardInputExt {
     #[inline]
     fn last_mouse_speed(&self) -> egui::Vec2 {
@@ -117,17 +96,11 @@ pub trait MouseKeyboardInputExt {
         egui::vec2(speed.x, speed.y)
     }
     #[inline]
-    fn mouse_button_mask(&self) -> i64 {
-        Input::godot_singleton().get_mouse_button_mask()
-    }
+    fn mouse_button_mask(&self) -> i64 { Input::godot_singleton().get_mouse_button_mask() }
     #[inline]
-    fn mouse_mode(&self) -> MouseMode {
-        Input::godot_singleton().get_mouse_mode()
-    }
+    fn mouse_mode(&self) -> MouseMode { Input::godot_singleton().mouse_mode() }
     #[inline]
-    fn is_key_pressed(&self, scancode: i64) -> bool {
-        Input::godot_singleton().is_key_pressed(scancode)
-    }
+    fn is_key_pressed(&self, scancode: i64) -> bool { Input::godot_singleton().is_key_pressed(scancode) }
     #[inline]
     fn is_mouse_button_pressed(&self, button: i64) -> bool {
         Input::godot_singleton().is_mouse_button_pressed(button)
@@ -137,22 +110,17 @@ pub trait MouseKeyboardInputExt {
         Input::godot_singleton().set_custom_mouse_cursor(image, shape, hotspot)
     }
     #[inline]
-    fn set_mouse_mode(&self, mode: i64) {
-        Input::godot_singleton().set_mouse_mode(mode)
-    }
+    fn set_mouse_mode(&self, mode: i64) { Input::godot_singleton().set_mouse_mode(mode) }
     #[inline]
-    fn warp_mouse_position(&self, to: Vector2) {
-        Input::godot_singleton().warp_mouse_position(to)
-    }
+    fn warp_mouse_position(&self, to: Vector2) { Input::godot_singleton().warp_mouse_position(to) }
 }
 
-/// An extension that can be used to add access to Godot's `Input` singleton's methods directly from any other object.
-/// This trait specifically implements general input using functionality based around the `InputMap`'s actions
+/// An extension that can be used to add access to Godot's `Input` singleton's methods directly from any other
+/// object. This trait specifically implements general input using functionality based around the `InputMap`'s
+/// actions
 pub trait InputMapExt {
     #[inline]
-    fn cursor_shape(&self) -> CursorShape {
-        Input::godot_singleton().get_current_cursor_shape()
-    }
+    fn cursor_shape(&self) -> CursorShape { Input::godot_singleton().get_current_cursor_shape() }
     #[inline]
     fn action_strength(&self, action: impl Into<GodotString>, exact: bool) -> f64 {
         Input::godot_singleton().get_action_strength(action, exact)

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use egui::epaint::ImageDelta;
-use egui::{Event, FullOutput};
+use egui::{ColorImage, Event, FullOutput};
 #[cfg(feature = "theme_support")]
 use gdnative::api::File;
 use gdnative::api::{
@@ -155,8 +155,8 @@ impl GodotEgui {
 
     /// Set the pixels_per_point use by `egui` to render the screen. This should be used to scale the `egui`
     /// nodes if you are using a non-standard scale for nodes in your game.
-    #[export]
-    pub fn set_pixels_per_point(&mut self, _owner: TRef<Control>, pixels_per_point: f64) {
+    #[method]
+    pub fn set_pixels_per_point(&mut self, #[base] owner: &Control, pixels_per_point: f64) {
         if pixels_per_point > 0f64 {
             self.pixels_per_point = pixels_per_point;
             self.egui_ctx.set_pixels_per_point(self.pixels_per_point as f32);
@@ -165,11 +165,11 @@ impl GodotEgui {
         }
     }
     /// Updates egui from the `_input` callback
-
+    ///
     /// Run when this node is added to the scene tree. Runs some initialization logic, like registering any
     /// custom fonts defined as properties
-    #[export]
-    fn _ready(&mut self, owner: TRef<Control>) {
+    #[method]
+    fn _ready(&mut self, #[base] owner: &Control) {
         match self.input_mode {
             GodotEguiInputMode::None => {
                 godot_print!("GodotEgui is not accepting input");
@@ -222,14 +222,15 @@ impl GodotEgui {
         for (texture_id, delta) in textures_delta.set {
             self.set_texture(texture_id, &delta)
         }
+
         #[cfg(feature = "theme_support")]
         // We do not check if the themepath is empty.
         if !self.theme_path.is_empty() {
-            let file = File::new();
-            if file.file_exists(self.theme_path.as_str()) {
-                match file.open(self.theme_path.as_str(), File::READ) {
+            let godot_file = File::new();
+            if godot_file.file_exists(self.theme_path.as_str()) {
+                match godot_file.open(self.theme_path.as_str(), File::READ) {
                     Ok(_) => {
-                        let file_data = file.get_as_text();
+                        let file_data = godot_file.get_as_text(true);
                         match ron::from_str::<egui_theme::EguiTheme>(file_data.to_string().as_str()) {
                             Ok(theme) => {
                                 let (style, font_definitions) = theme.extract();
@@ -252,11 +253,11 @@ impl GodotEgui {
     }
 
     /// Is used to indicate if the mouse was captured during the previous frame.
-    #[export]
-    pub fn mouse_was_captured(&self, _owner: TRef<Control>) -> bool { self.mouse_was_captured }
+    #[method]
+    pub fn mouse_was_captured(&self, #[base] _owner: &Control) -> bool { self.mouse_was_captured }
 
-    #[export]
-    pub fn _input(&mut self, owner: TRef<Control>, event: Ref<InputEvent>) {
+    #[method]
+    pub fn _input(&mut self, #[base] owner: &Control, event: Ref<InputEvent>) {
         self.handle_godot_input(owner, event, false);
         if self.mouse_was_captured(owner) {
             // Set the input as handled by the viewport if the gui believes that is has been captured.
@@ -265,8 +266,8 @@ impl GodotEgui {
     }
 
     /// Updates egui from the `_gui_input` callback
-    #[export]
-    pub fn _gui_input(&mut self, owner: TRef<Control>, event: Ref<InputEvent>) {
+    #[method]
+    pub fn _gui_input(&mut self, #[base] owner: &Control, event: Ref<InputEvent>) {
         self.handle_godot_input(owner, event, true);
         if self.mouse_was_captured(owner) {
             owner.accept_event();
@@ -278,8 +279,8 @@ impl GodotEgui {
     /// `_unhandled_input`. `is_gui_input` should be true only if this event should be processed like it
     /// was emitted from the `_gui_input` callback. # Note: If you are calling this manually, self.input_mode
     /// *MUST* be set to GodotEguiInputMode::None
-    #[export]
-    pub fn handle_godot_input(&mut self, owner: TRef<Control>, event: Ref<InputEvent>, is_gui_input: bool) {
+    #[method]
+    pub fn handle_godot_input(&mut self, #[base] owner: &Control, event: Ref<InputEvent>, is_gui_input: bool) {
         let event = unsafe { event.assume_safe() };
         let mut raw_input = self.raw_input.borrow_mut();
         let pixels_per_point = self.egui_ctx.pixels_per_point();
@@ -339,8 +340,9 @@ impl GodotEgui {
                     alt: (mods & GlobalConstants::KEY_MASK_ALT) != 0,
                     ..Default::default()
                 };
+                let repeat = false;
 
-                raw_input.events.push(egui::Event::Key { key, pressed: key_ev.is_pressed(), modifiers })
+                raw_input.events.push(egui::Event::Key { key, pressed: key_ev.is_pressed(), modifiers, repeat })
             }
 
             if key_ev.is_pressed() && key_ev.unicode() != 0 {
@@ -387,7 +389,7 @@ impl GodotEgui {
 
     /// Create a Godot `Image` from an egui `ImageDelta`
     fn image_from_delta(delta: &ImageDelta) -> Ref<Image, Unique> {
-        let pixels: ByteArray = match &delta.image {
+        let pixels: PoolArray<u8> = match &delta.image {
             egui::ImageData::Color(egui_image) => {
                 assert_eq!(
                     egui_image.width() * egui_image.height(),
@@ -404,7 +406,7 @@ impl GodotEgui {
                     "Mismatch between texture size and texel count"
                 );
                 // I don't really know what this is for but it was
-                let gamma = 1.0 / 2.2;
+                let gamma = Some(1.0 / 2.2);
                 egui_image.srgba_pixels(gamma).flat_map(|a| a.to_array()).collect()
             }
         };
@@ -495,21 +497,21 @@ impl GodotEgui {
                 // First we need to get the indicies and map them to the i32 which godot understands.
                 let indicies = mesh.indices.drain(0..).map(i32::from).collect::<Vec<i32>>();
                 // Then we can get the indicies
-                let indices = Int32Array::from_vec(indicies);
+                let indices = <PoolArray<i32>>::from_vec(indicies);
                 let vertices = mesh
                     .vertices
                     .iter()
                     .map(|x| x.pos)
                     .map(|pos| Vector2::new(pos.x, pos.y))
-                    .collect::<Vector2Array>();
+                    .collect::<PoolArray<Vector2>>();
 
                 let uvs = mesh
                     .vertices
                     .iter()
                     .map(|x| x.uv)
                     .map(|uv| Vector2::new(uv.x, uv.y))
-                    .collect::<Vector2Array>();
-                let colors = mesh.vertices.iter().map(|x| x.color).map(egui2color).collect::<ColorArray>();
+                    .collect::<PoolArray<Vector2>>();
+                let colors = mesh.vertices.iter().map(|x| x.color).map(egui2color).collect::<PoolArray<Color>>();
 
                 unsafe {
                     vs.canvas_item_clear(vs_mesh.canvas_item);
@@ -521,8 +523,8 @@ impl GodotEgui {
                         vertices,
                         colors,
                         uvs,
-                        Int32Array::new(),
-                        Float32Array::new(),
+                        <PoolArray<i32>>::new(),
+                        <PoolArray<f32>>::new(),
                         texture_rid,
                         -1,
                         Rid::new(),
@@ -557,8 +559,8 @@ impl GodotEgui {
     /// This should only be necessary when you wish to disable an Egui node and do not wish to use the
     /// internal Godot visibility or when you wish to free canvas_item resources for memory intensive
     /// GUIs.
-    #[export]
-    fn clear(&mut self, _owner: TRef<Control>) {
+    #[method]
+    fn clear(&mut self, #[base] _owner: &Control) {
         let vs = unsafe { VisualServer::godot_singleton() };
         for mesh in self.meshes.iter() {
             unsafe {
@@ -577,8 +579,8 @@ impl GodotEgui {
     ///
     /// If the UI should be updated almost every frame due to animations or constant changes with data, favor
     /// setting `reactive_update` to true instead.
-    #[export]
-    fn refresh(&self, _owner: TRef<Control>) { self.egui_ctx.request_repaint(); }
+    #[method]
+    fn refresh(&self, #[base] _owner: &Control) { self.egui_ctx.request_repaint(); }
 
     /// Call this to draw a new frame using a closure taking a single `egui::Context` parameter
     pub fn update_ctx(&mut self, owner: &Control, draw_fn: impl FnOnce(&mut egui::Context)) {
@@ -622,10 +624,10 @@ impl GodotEgui {
         // `egui_ctx` will use all the layout code to determine if there are any changes.
         // `output.needs_repaint` lets `GodotEgui` know whether we need to redraw the clipped mesh and repaint the
         // new texture or not.
-        if needs_repaint {
-            let clipped_meshes = self.egui_ctx.tessellate(shapes);
-            self.paint_shapes(owner, clipped_meshes, textures_delta);
-        }
+        // if needs_repaint {
+        let clipped_meshes = self.egui_ctx.tessellate(shapes);
+        self.paint_shapes(owner, clipped_meshes, textures_delta);
+        // }
     }
     /// Call this to draw a new frame using a closure taking an `egui::Ui` parameter. Prefer this over
     /// `update_ctx` if the `CentralPanel` is going to be used for convenience. Accepts an optional

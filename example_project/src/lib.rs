@@ -1,6 +1,8 @@
+use egui::plot::PlotPoints;
 use egui::ComboBox;
 use gdnative::prelude::*;
-use godot_egui::{ext::InputMapExt, GodotEgui};
+use godot_egui::ext::InputMapExt;
+use godot_egui::GodotEgui;
 mod window;
 use window::GodotEguiWindowExample;
 
@@ -35,7 +37,7 @@ pub struct GodotEguiExample {
     handle_input: bool,
 }
 
-#[gdnative::derive::methods]
+#[methods]
 impl GodotEguiExample {
     pub fn new(_owner: TRef<Control>) -> Self {
         Self {
@@ -55,8 +57,8 @@ impl GodotEguiExample {
         }
     }
 
-    #[export]
-    pub fn _ready(&mut self, owner: TRef<Control>) {
+    #[method]
+    pub fn _ready(&mut self, #[base] owner: &Control) {
         godot_print!("Initializing godot egui");
         owner.set_process_input(self.handle_input);
         if self.handle_gui_input {
@@ -80,7 +82,7 @@ impl GodotEguiExample {
     /// Used in the `egui::Plot` example below. Taken from the egui demo.
     fn sin_plot(&self) -> egui::plot::Line {
         let time = self.elapsed_time;
-        egui::plot::Line::new(egui::plot::Values::from_explicit_callback(
+        egui::plot::Line::new(PlotPoints::from_explicit_callback(
             move |x| 0.5 * (2.0 * x).sin() * time.sin(),
             ..,
             512,
@@ -89,10 +91,11 @@ impl GodotEguiExample {
         .name("wave")
     }
     /// Updates egui from the `_input` callback
-    #[export]
-    pub fn _input(&mut self, owner: TRef<Control>, event: Ref<InputEvent>) {
+    #[method]
+    pub fn _input(&mut self, #[base] owner: &Control, event: Ref<InputEvent>) {
         let gui = unsafe { self.gui.as_ref().expect("GUI initialized").assume_safe() };
         gui.map_mut(|gui, instance| {
+            let instance = instance.as_ref();
             gui.handle_godot_input(instance, event, false);
             if gui.mouse_was_captured(instance) {
                 // Set the input as handled by the viewport if the gui believes that is has been captured.
@@ -103,10 +106,11 @@ impl GodotEguiExample {
     }
 
     /// Updates egui from the `_gui_input` callback
-    #[export]
-    pub fn _gui_input(&mut self, owner: TRef<Control>, event: Ref<InputEvent>) {
+    #[method]
+    pub fn _gui_input(&mut self, #[base] owner: &Control, event: Ref<InputEvent>) {
         let gui = unsafe { self.gui.as_ref().expect("GUI initialized").assume_safe() };
         gui.map_mut(|gui, instance| {
+            let instance = instance.as_ref();
             gui.handle_godot_input(instance, event, true);
             if gui.mouse_was_captured(instance) {
                 owner.accept_event();
@@ -114,8 +118,9 @@ impl GodotEguiExample {
         })
         .expect("map_mut should succeed");
     }
-    #[export]
-    pub fn _process(&mut self, _owner: TRef<Control>, delta: f64) {
+
+    #[method]
+    pub fn _process(&mut self, #[base] owner: &Control, delta: f64) {
         let gui = unsafe { self.gui.as_ref().expect("GUI initialized").assume_safe() };
 
         self.elapsed_time += delta;
@@ -125,6 +130,7 @@ impl GodotEguiExample {
         let frame = egui::Frame { inner_margin: egui::style::Margin::symmetric(20.0, 20.0), ..Default::default() };
 
         gui.map_mut(|gui, instance| {
+            let instance = instance.as_ref();
             // This resizes the window each frame based on a sine wave
             if self.dynamically_change_pixels_per_point {
                 gui.set_pixels_per_point(instance, (self.elapsed_time.sin() * 0.20) + 0.8);
@@ -237,7 +243,8 @@ impl GodotEguiExample {
                         }
                     });
                 });
-                // TODO: How fonts are stored has completely changed so this will need to be redone if it is desired in the sample project.
+                // TODO: How fonts are stored has completely changed so this will need to be redone if it is
+                // desired in the sample project.
                 if self.show_font_settings {
                     egui::Window::new("Style Settings")
                         .open(&mut self.show_font_settings)
