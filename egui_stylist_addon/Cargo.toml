@@ -3,19 +3,19 @@ name = "godot_egui_stylist"
 version = "0.2.0"
 authors = ["Jacobsky"]
 publish = false
-edition = "2018"
+edition = "2021"
 workspace = ".."
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-gdnative = "0.10"
-egui = "0.18"
-godot_egui = { path = "../godot_egui", features = ["theme_support"] }
-egui-theme = "0.2.0"
-egui-stylist = "0.2.0"
+gdnative = { workspace = true }
+egui = { workspace = true }
+godot_egui = { workspace = true, features = ["theme_support"] }
+egui-theme = { workspace = true }
+egui-stylist = { workspace = true }
 
-ron = "0.7"
-anyhow = "1.0.43"
-serde = "1.0.130"
+ron = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }

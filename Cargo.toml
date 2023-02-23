@@ -1,6 +1,13 @@
 [workspace]
-members = [
-    "godot_egui",
-    "example_project",
-    "egui_stylist_addon"
-]
+members = ["godot_egui", "example_project", "egui_stylist_addon"]
+
+[workspace.dependencies]
+anyhow = "1"
+egui = "0.21"
+egui_demo_lib = "0.21"
+egui-stylist = "0.2"
+egui-theme = "0.2"
+gdnative = "0.11"
+godot_egui = { path = "./godot_egui" }
+ron = "0.8"
+serde = "1"

@@ -3,14 +3,14 @@ name = "godot_egui_example"
 version = "0.2.0"
 authors = ["Setzer22", "Jacobsky"]
 publish = false
-edition = "2018"
+edition = "2021"
 workspace = ".."
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-gdnative = "0.10"
-egui = "0.18"
-egui_demo_lib = "0.18"
-godot_egui = { path = "../godot_egui" }
+gdnative = { workspace = true }
+egui = { workspace = true }
+egui_demo_lib = { workspace = true }
+godot_egui = { workspace = true }

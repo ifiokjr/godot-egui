@@ -7,16 +7,15 @@ license = "MIT"
 version = "0.2.0"
 authors = ["Setzer22", "Jacobsky"]
 keywords = ["gamedev", "gui"]
-edition = "2018"
+edition = "2021"
 readme = "../README.md"
-workspace = ".."
 
 [dependencies]
-gdnative = "0.10"
-egui = "0.18"
-egui-theme = { version = "0.2", optional = true }
-ron = "0.7"
+gdnative = { workspace = true }
+egui = { workspace = true }
+egui-theme = { workspace = true, optional = true }
+ron = { workspace = true }
 
 [features]
 default = []
-theme_support = [ "dep:egui-theme" ]
+theme_support = ["dep:egui-theme"]
